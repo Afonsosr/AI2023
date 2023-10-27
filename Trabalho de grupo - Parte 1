@@ -1,4 +1,4 @@
-% Extensão do predicado utente: Numero_do_utente,Nome,Cidade,Sexo,Antecedentes_familiares -> {V,F,D}                           Numero_do_utente começa 1,2,3,...; Antecedentes_familiares é "sim" ou "nao" (se tinha gente na família que era gooooooooorda)
+% Extensão do predicado utente: Numero_do_utente,Nome,Cidade,Sexo,Antecedentes_familiares -> {V,F,D}                           Numero_do_utente começa 1,2,3,...; Antecedentes_familiares é "sim" ou "nao" 
 % Extensão do predicado registo: Registo,Numero_do_utente,Dia,Mes,Ano,Idade,Altura(em cm),Peso,Tipo_de_dieta -> {V,F,D}       no Tipo_de_dieta, é dizer se é "boa" ou "ma"; n Registo, vamos criar um numero a toa, cada registo vai ter um número associado. assim, podem haver varios registos pra mesma pessoa. podemos definir tipo que o registo tenha um número de 4 algarismos
 % Extensão do predicado imc: Registo,Numero_do_utente,Imc_valor,Classificacao,Lim_inf,Lim_sup -> {V,F,D}
 
@@ -34,8 +34,53 @@ utente(2,nuno,evora,m,sim).
 registo(r1,2,24,10,2023,56,179,86,boa).
 imc(r1,2,26.8,sobrepeso,24.9,30).
 
+% Calculadora do IMC                        %
+                                            %
+calcular_imc(Nu,P,Al,Imc_valor):-           %
+            Imc_valor is P/(Al*Al).         %
+                                            % ver estas partes
+% Avaliador do IMC                          %
+                                            %
+
+
 % conhecimento incerto
-excecao(utente(Nu,N,C,S,A)):-utente(nao_sabe,nao_sabe,nao_sabe,nao_sabe,nao_sabe)
+excecao(utente(Nu,N,C,S,A)):-utente(Nu,N,C,S,nao_sabe).
 utente(3,francisca,povoa,f,nao_sabe).
-registo(r1,3,20,09,2021,13,157,44,mal).    % imc = 17.9
-registo(r2,3,22,09,2022,14,161,46,mal).   % imc = 17.7
+registo(r1,3,20,09,2021,13,157,44,ma). 
+imc(r1,3,17.9,magreza,0,18.5).                      % não sabe se tem antecedentes familiares
+registo(r2,3,22,09,2022,14,161,46,ma).              
+imc(r2,3,17.7,magreza,0,18.5).
+
+excecao(registo(R,Nu,D,M,A,I,Al,P,Td)):-registo(R,Nu,D,M,A,I,nao_sabe,nao_sabe,Td).
+utente(4,joana,porto,f,nao).
+registo(r1,4,23,07,2020,34,nao_sabe,nao_sabe,boa).  % não sabe quanto mede e quanto pesa
+
+% conhecimento impreciso
+utente(5,alberto,faro,m,nao).                  
+excecao(registo(r1,5,23,02,2020,31,A,78,boa)):-     % não tem a certeza de quanto mede
+            A>=175,
+            A=<185.
+
+utente(6,filipa,guimaraes,f,sim).
+excecao(registo(r1,5,23,01,2018,31,168,60,boa)).    % não se lembra em que dia foi feito o registo
+excecao(registo(r1,5,24,01,2018,31,168,60,boa)).
+
+% conhecimento interdito
+
+utente(7,cleopatra,cairo,f,nao_sabe). % neste caso, temos aqui conhecimento incerto. não se sabe se a cleopatra tinha antecedentes familiares de obesidade
+registo(r1,7,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao). 
+excecao(registo(R,Nu,D,M,A,I,Al,P,Td)):-
+                registo(R,Nu,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
+interdito(algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
+
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,7,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
+                comprimento(S,N),
+                N==0).
+
+utente(8,marcelo,celorico,m,sim).
+registo(r1,8,09,10,2022,73,alguma_altura,algum_peso,alguma_alimentacao).
+
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,8,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
+                comprimento(S,N),
+                N==0).
+
