@@ -68,19 +68,17 @@ excecao(registo(r1,5,24,01,2018,31,168,60,boa)).
 % conhecimento interdito
 
 utente(7,cleopatra,cairo,f,nao_sabe). % neste caso, temos aqui conhecimento incerto. não se sabe se a cleopatra tinha antecedentes familiares de obesidade
-registo(r1,7,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao). 
-excecao(registo(R,Nu,D,M,A,I,Al,P,Td)):-
-                registo(R,Nu,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
-interdito(algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
+%registo(r1,7,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao). 
 
-+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,7,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
-                comprimento(S,N),
-                N==0).
+
+%+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,7,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
+%               comprimento(S,N),
+%                N==0).
 
 utente(8,marcelo,celorico,m,sim).
-registo(r1,8,09,10,2022,73,alguma_altura,algum_peso,alguma_alimentacao).
-
+registo(r1,8,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
+excecao(registo(R,Nu,D,M,A,I,Al,P,Td)):-registo(R,Nu,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
+interdito(algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
 +registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,8,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
-                comprimento(S,N),
-                N==0).
-
+                       comprimento(S,N),
+                       N==0). 
