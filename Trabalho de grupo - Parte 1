@@ -4,6 +4,7 @@
 
 :-op(900,xfy,'::').
 :-dynamic('-'/1).
+:-dynamic('.'/1).
 :-dynamic('+'/1).
 :-dynamic(utente/5).
 :-dynamic(registo/9).
@@ -34,14 +35,33 @@ utente(2,nuno,evora,m,sim).
 registo(r1,2,24,10,2023,56,179,86,boa).
 imc(r1,2,26.8,sobrepeso,24.9,30).
 
-% Calculadora do IMC                        %
-                                            %
-calcular_imc(Nu,P,Al,Imc_valor):-           %
-            Imc_valor is P/(Al*Al).         %
-                                            % ver estas partes
-% Avaliador do IMC                          %
-                                            %
+% Calculadora do IMC                        
+                                            
+calcular_imc(P,Al,Imc_valor):-              
+            Imc_valor is P/(Al*Al).         
+                                            
 
+% Avaliador/Classificador do IMC                          
+
+classificacao_imc(Imc,Classificacao):-
+                Imc<18.5,
+                Imc>0,
+                Classificacao=magreza;
+
+                Imc>=18.5,
+                Imc=<24.9,
+                Classificacao=normal;
+
+                Imc>=25,
+                Imc=<30,
+                Classificacao=sobrepeso;
+
+                Imc>=30.1,
+                Imc=<39.9,
+                Classificacao=obesidade;
+
+                Imc>=40,
+                Classificacao=obesidade_morbida.                
 
 % conhecimento incerto
 excecao(utente(Nu,N,C,S,A)):-utente(Nu,N,C,S,nao_sabe).
@@ -67,18 +87,30 @@ excecao(registo(r1,5,24,01,2018,31,168,60,boa)).
 
 % conhecimento interdito
 
+excecao(registo(R,Nu,D,M,A,I,Al,P,Td)):-registo(R,Nu,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
+interdito(algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
+
 utente(7,cleopatra,cairo,f,nao_sabe). % neste caso, temos aqui conhecimento incerto. não se sabe se a cleopatra tinha antecedentes familiares de obesidade
-%registo(r1,7,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao). 
-
-
-%+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,7,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
-%               comprimento(S,N),
-%                N==0).
+registo(r1,7,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao). 
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,7,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
+                       comprimento(S,N),                                       
+                       N==0).                     % nao temos forma de saber nenhum dado de saude da cleopatra 
 
 utente(8,marcelo,celorico,m,sim).
 registo(r1,8,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
-excecao(registo(R,Nu,D,M,A,I,Al,P,Td)):-registo(R,Nu,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
-interdito(algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
 +registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,8,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
-                       comprimento(S,N),
-                       N==0). 
+                       comprimento(S,N),        
+                       N==0).                     % aqui também não nos é permitido saber nenhum dado de saúde sobre o presidente da República
+
+
+% conhecimento positivo e negativo
+
+utente(9,alberto,tomar,m,nao).
+registo(r1,9,04,11,2023,43,171,68,boa).                                                         %%%%%%%%%%%%%%%%%%%%%%%
+-imc(r1,9,27.2,obesidade,30.1,39.9).        % conhecimento negativo. este registo é falso       %%% Aqui temos conhecimento com o "-". Podiamos criar algum tambem que tivesse o "nao" (tipo, nao ha prova que...)
+imc(r1,9,23.3,normal,18.5,24.9).        % este é o verdadeiro registo                           %%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%   FALTA SISTEMA DE INFERENCIA
+%%   aquilo de P->P, P->N,N->P,N->N
