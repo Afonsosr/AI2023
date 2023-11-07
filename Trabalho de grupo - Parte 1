@@ -3,6 +3,8 @@
 % Extensão do predicado imc: Registo,Numero_do_utente,Imc_valor,Classificacao,Lim_inf,Lim_sup -> {V,F,D}
 
 :-op(900,xfy,'::').
+:-op(900, xfy, 'e').
+:-op(900, xfy, 'ou').
 :-dynamic('-'/1).
 :-dynamic('.'/1).
 :-dynamic('+'/1).
@@ -10,21 +12,232 @@
 :-dynamic(registo/9).
 :-dynamic(imc/6).
 
+
+
 nao(Questao):- Questao,
                  !,
                  fail.
 nao(Questao).
 
+
+% Função que permite a evolução do conhecimento
+
+evolucao(Termo) :-
+    findall(Invariante, +Termo::Invariante, Lista),  
+    insercao(Termo),
+    teste(Lista).
+
+insercao(Termo) :-assert(Termo).
+insercao(Termo) :-retract(Termo),!, fail.
+
+teste([]).
+teste([R|LR]):- R, teste(LR).
+
+% Função do comprimento
+
+comprimento([],0).
+comprimento([H|T],C):-comprimento(T,N), 
+                    C is N+1.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%    INVARIANTES    %%%%%%  Adição de restrições para a inserção e remoção de novos dados na base de dados.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+
+%%%%%%%%%%%% invariantes inserção utente %%%%%%%%%%%%%%      % nao funciona
++utente(Nu,N,C,S,A)::(findall((Nu),(utente(Nu,_,_,_,_)),Com),
+            comprimento(Com,X),                              % Garante que não ha dois registos de utente para o mesmo número. mesmo que se crie outro registo para a mesma pessoa, por exemplo, porque mudou de cidade, tem de se criar um registo novo
+            X==1).
+
+%%%%%%%%%%%% invariantes inserção registo %%%%%%%%%%%%%%         % nao funciona
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((R,Nu),registo(R,Nu,_,_,_,_,_,_,_),Com),
+            comprimento(Com,X),                               % Garante que não ha dois registos com o mesmo número para um determinado utente.
+            X=1).
+
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((Nu),registo(R,Nu,_,_,_,_,_,_,_),utente(Nu,_,_,_,_),Com),         % nao funciona
+            comprimento(Com,X),                                        % Só é possível inserir registo de utente se o utente estiver inserido
+            X>=1).                             
+
+ 
++registo(R,Nu,D,M,A,I,Al,P,Td):-       % nao funciona
+            D=<31:-member(M, [1, 3, 5, 7, 8, 10, 12]),
+            A=<2023,                
+            A>=0,                                % Garante que um registo tem de ter mês e ano válidos e que os valores de idade, peso e altura tem de ser positivos.
+            Al>0,
+            I>0,
+            P>0;
+
+            D=<30:-member(M, [4, 6, 8,11]),
+            A=<2023,              
+            A>=0,
+            Al>0,
+            I>0,
+            P>0;
+            
+            D=<29:-member(M, [2]),
+            A=<2023,               
+            A>=0,
+            A mod 4=:=0,                    % Nesta parte, garante os valores de inserção para um ano bissexto
+            A mod 100 =\= 0,
+            Al>0,
+            I>0,
+            P>0;
+
+            D=<28:-member(M, [2]),
+            A=<2023,                % Aqui não precisamos de verificações específicas nos anos porque se é bissexto o programa para em cima, não entra nesta parte.
+            A>=0,
+            Al>0,
+            I>0,
+            P>0.
+
+%%%%%%%%%%%% invariantes inserção imc %%%%%%%%%%%%%%
+
++imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((R,Nu),imc(R,Nu,Imc,Cl,Linf,Lsup),Com), % nao funciona
+            comprimento(Com,X),                                 % Garante que não ha dois registos de imc com o mesmo número para um determinado utente.
+            X=:=1).
+
++imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((Nu),imc(R,Nu,Imc,Cl,Linf,Lsup),utente(Nu,N,C,S,A),Com),   % nao funciona
+            comprimento(Com,X),                                        % Só é possível inserir registo de imc se o utente estiver inserido
+            X>=1).                             
+
++imc(R,Nu,Imc,Cl,Linf,Lsup):-% funciona
+            Imc=<Lsup,               % o valor do imc tem de estar dentro dos limites definidos.
+            Imc>=Linf.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%---------------------------------------------------------------
+%                   SISTEMAS DE INFERÊNCIA
+%---------------------------------------------------------------
+
+% Sistema de Inferência para Questão Única
 si(Questao,verdadeiro) :- Questao.
 si(Questao,falso) :- -Questao.
 si(Questao,desconhecido) :- nao(Questao),nao(-Questao).
 
-% Pressupostos do Mundo Fechado
+% Sistema de Inferência para 2 Questões 
+
+siM(Q1 e Q2, verdadeiro) :-
+    si(Q1, verdadeiro),
+    si(Q2, verdadeiro).
+siM(Q1 e Q2, falso) :-
+    si(Q1, verdadeiro),
+    si(Q2, falso).
+siM(Q1 e Q2, desconhecido) :-
+    si(Q1, verdadeiro),
+    si(Q2, desconhecido).
+siM(Q1 e Q2, falso) :-
+    si(Q1, falso),
+    si(Q2, verdadeiro).
+siM(Q1 e Q2, falso) :-
+    si(Q1, falso),
+    si(Q2, falso).
+siM(Q1 e Q2, falso) :-
+    si(Q1, falso),
+    si(Q2, desconhecido).
+siM( Q1 e Q2, desconhecido) :-
+    si(Q1, desconhecido),
+    si(Q2, verdadeiro).
+siM(Q1 e Q2, falso) :-
+    si(Q1, desconhecido),
+    si(Q2, falso).
+siM(Q1 e Q2, desconhecido) :-
+    si(Q1, desconhecido),
+    si(Q2, desconhecido).
+
+
+siM(Q1 ou Q2, verdadeiro) :-
+    si(Q1, verdadeiro),
+    si(Q2, verdadeiro).
+siM(Q1 ou Q2, verdadeiro) :-
+    si(Q1, verdadeiro),
+    si(Q2, falso).
+siM(Q1 ou Q2, verdadeiro) :-
+    si(Q1, verdadeiro),
+    si(Q2, desconhecido).
+siM(Q1 ou Q2, verdadeiro) :-
+    si(Q1, falso),
+    si(Q2, verdadeiro).
+siM(Q1 ou Q2, falso) :-
+    si(Q1, falso),
+    si(Q2, falso).
+siM(Q1 ou Q2, desconhecido) :-
+    si(Q1, falso),
+    si(Q2, desconhecido).
+siM(Q1 ou Q2, verdadeiro) :-
+    si(Q1, desconhecido),
+    si(Q2, verdadeiro).
+siM(Q1 ou Q2, desconhecido) :-
+    si(Q1, desconhecido),
+    si(Q2, falso).
+siM(Q1 ou Q2, desconhecido) :-
+    si(Q1, desconhecido),
+    si(Q2, desconhecido).
+
+
+%----------------------------------------------
+%       Pressupostos do Mundo Fechado
+%----------------------------------------------
+
+
 -utente(Nu,N,C,S,A):-nao(utente(Nu,N,C,S,A)),
                 nao(excecao(utente(Nu,N,C,S,A))).
 
 -registo(R,Nu,D,M,A,I,Al,P,Td):-nao(registo(R,Nu,D,M,A,I,Al,P,Td)),
                 nao(excecao(registo(R,Nu,D,M,A,I,Al,P,Td))).
+
+-imc(R,Nu,Imc,Cl,Linf,Lsup):-nao(imc(R,Nu,Imc,Cl,Linf,Lsup)),
+                nao(excecao(imc(R,Nu,Imc,Cl,Linf,Lsup))).
+
+% Calculadora do IMC - Auxiliar                  
+                                            
+calcular_imc(P,Al,Imc_valor):-              
+            Imc_valor is P/((Al/100)*(Al/100)).         
+
+%-------------------------------------------------
+%        Avaliador/Classificador do IMC                          
+%-------------------------------------------------
+
+
+classificacao_imc(R,Nu,Imc,Classificacao,Lims):-
+                registo(R,Nu,_,_,_,_,Al,P,_),
+                calcular_imc(P,Al,Imc),
+                Lims = [0,18.4],
+                Imc<18.5,
+                Imc>0,
+                Classificacao=magreza;
+
+                registo(R,Nu,_,_,_,_,Al,P,_),
+                calcular_imc(P,Al,Imc),
+                Lims = [18.5,24.9],
+                Imc>=18.5,
+                Imc=<24.9,
+                Classificacao=normal;
+
+                registo(R,Nu,_,_,_,_,Al,P,_),
+                calcular_imc(P,Al,Imc),
+                Lims = [25,30],
+                Imc>=25,
+                Imc=<30,
+                Classificacao=sobrepeso;
+
+                registo(R,Nu,_,_,_,_,Al,P,_),
+                calcular_imc(P,Al,Imc),
+                Lims = [30.1,39.9],
+                Imc>=30.1,
+                Imc=<39.9,
+                Classificacao=obesidade;
+
+                registo(R,Nu,_,_,_,_,Al,P,_),
+                calcular_imc(P,Al,Imc),
+                Imc>=40,
+                Lims = [40,+∞],
+                Classificacao=obesidade_morbida.                
+
+%-----------------------------------------------------------------
+%                 VÁRIOS TIPOS DE CONHECIMENTO
+%-----------------------------------------------------------------
 
 % conhecimento perfeito
 utente(1,maria,braga,f,nao).
@@ -34,34 +247,6 @@ imc(r1,1,20.7,normal,18.5,24.9).
 utente(2,nuno,evora,m,sim).
 registo(r1,2,24,10,2023,56,179,86,boa).
 imc(r1,2,26.8,sobrepeso,24.9,30).
-
-% Calculadora do IMC                        
-                                            
-calcular_imc(P,Al,Imc_valor):-              
-            Imc_valor is P/(Al*Al).         
-                                            
-
-% Avaliador/Classificador do IMC                          
-
-classificacao_imc(Imc,Classificacao):-
-                Imc<18.5,
-                Imc>0,
-                Classificacao=magreza;
-
-                Imc>=18.5,
-                Imc=<24.9,
-                Classificacao=normal;
-
-                Imc>=25,
-                Imc=<30,
-                Classificacao=sobrepeso;
-
-                Imc>=30.1,
-                Imc=<39.9,
-                Classificacao=obesidade;
-
-                Imc>=40,
-                Classificacao=obesidade_morbida.                
 
 % conhecimento incerto
 excecao(utente(Nu,N,C,S,A)):-utente(Nu,N,C,S,nao_sabe).
@@ -112,5 +297,3 @@ imc(r1,9,23.3,normal,18.5,24.9).        % este é o verdadeiro registo          
 
 
 
-%%   FALTA SISTEMA DE INFERENCIA
-%%   aquilo de P->P, P->N,N->P,N->N                                   %%%% também podiamos criar uma exceção qualquer
