@@ -20,7 +20,7 @@ nao(Questao):- Questao,
 nao(Questao).
 
 
-% Função que permite a evolução do conhecimento
+% Função que permite a evolução do conhecimento - Adicionar conhecimento à BD
 
 evolucao(Termo) :-
     findall(Invariante, +Termo::Invariante, Lista),  
@@ -44,17 +44,17 @@ comprimento([H|T],C):-comprimento(T,N),
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 
-%%%%%%%%%%%% invariantes inserção utente %%%%%%%%%%%%%%      % nao funciona
-+utente(Nu,N,C,S,A)::(findall((Nu),(utente(Nu,_,_,_,_)),Com),
+%%%%%%%%%%%% invariantes inserção utente %%%%%%%%%%%%%%     
++utente(Nu,N,C,S,A)::(findall((Nu),(utente(Nu,_,_,_,_)),Com),    %FUNCIONA
             comprimento(Com,X),                              % Garante que não ha dois registos de utente para o mesmo número. mesmo que se crie outro registo para a mesma pessoa, por exemplo, porque mudou de cidade, tem de se criar um registo novo
             X==1).
 
-%%%%%%%%%%%% invariantes inserção registo %%%%%%%%%%%%%%         % nao funciona
-+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((R,Nu),registo(R,Nu,_,_,_,_,_,_,_),Com),
-            comprimento(Com,X),                               % Garante que não ha dois registos com o mesmo número para um determinado utente.
-            X=1).
+%%%%%%%%%%%% invariantes inserção registo %%%%%%%%%%%%%%         
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((R,Nu),(registo(R,Nu,D,M,A,I,Al,P,Td)),Com),    %FUNCIONA
+            comprimento(Com,X),                              % Garante que não ha dois registos de utente para o mesmo número. mesmo que se crie outro registo para a mesma pessoa, por exemplo, porque mudou de cidade, tem de se criar um registo novo
+            X==1).
 
-+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((Nu),registo(R,Nu,_,_,_,_,_,_,_),utente(Nu,_,_,_,_),Com),         % nao funciona
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((Nu),((registo(_,Nu,_,_,_,_,_,_,_)),(utente(Nu,_,_,_,_))),Com),         % nao funciona
             comprimento(Com,X),                                        % Só é possível inserir registo de utente se o utente estiver inserido
             X>=1).                             
 
@@ -92,15 +92,15 @@ comprimento([H|T],C):-comprimento(T,N),
 
 %%%%%%%%%%%% invariantes inserção imc %%%%%%%%%%%%%%
 
-+imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((R,Nu),imc(R,Nu,Imc,Cl,Linf,Lsup),Com), % nao funciona
++imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((R,Nu),(imc(R,Nu,Imc,Cl,Linf,Lsup)),Com), %FUNCIONA
             comprimento(Com,X),                                 % Garante que não ha dois registos de imc com o mesmo número para um determinado utente.
             X=:=1).
 
-+imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((Nu),imc(R,Nu,Imc,Cl,Linf,Lsup),utente(Nu,N,C,S,A),Com),   % nao funciona
++imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((Nu),(imc(_,Nu,_,_,_,_),utente(Nu,_,_,_,_)),Com),   % FUNCIONA
             comprimento(Com,X),                                        % Só é possível inserir registo de imc se o utente estiver inserido
-            X>=1).                             
+            X>=1).                              
 
-+imc(R,Nu,Imc,Cl,Linf,Lsup):-% funciona
++imc(R,Nu,Imc,Cl,Linf,Lsup):- %NAO FUNCIONA
             Imc=<Lsup,               % o valor do imc tem de estar dentro dos limites definidos.
             Imc>=Linf.
 
@@ -112,66 +112,85 @@ comprimento([H|T],C):-comprimento(T,N),
 %---------------------------------------------------------------
 
 % Sistema de Inferência para Questão Única
-si(Questao,verdadeiro) :- Questao.
-si(Questao,falso) :- -Questao.
-si(Questao,desconhecido) :- nao(Questao),nao(-Questao).
+si(Questao,verdadeiro):- 
+        Questao.
+si(Questao,falso):-
+       -Questao.
+si(Questao,desconhecido):- 
+        nao(Questao),nao(-Questao).
 
 % Sistema de Inferência para 2 Questões 
 
-siM(Q1 e Q2, verdadeiro) :-
+siM(Q1 e Q2, verdadeiro):-
     si(Q1, verdadeiro),
     si(Q2, verdadeiro).
-siM(Q1 e Q2, falso) :-
+
+siM(Q1 e Q2, falso):-
     si(Q1, verdadeiro),
     si(Q2, falso).
-siM(Q1 e Q2, desconhecido) :-
+
+siM(Q1 e Q2, desconhecido):-
     si(Q1, verdadeiro),
     si(Q2, desconhecido).
-siM(Q1 e Q2, falso) :-
+
+siM(Q1 e Q2, falso):-
     si(Q1, falso),
     si(Q2, verdadeiro).
-siM(Q1 e Q2, falso) :-
+
+siM(Q1 e Q2, falso):-
     si(Q1, falso),
     si(Q2, falso).
-siM(Q1 e Q2, falso) :-
+
+siM(Q1 e Q2, falso):-
     si(Q1, falso),
     si(Q2, desconhecido).
-siM( Q1 e Q2, desconhecido) :-
+
+siM( Q1 e Q2, desconhecido):-
     si(Q1, desconhecido),
     si(Q2, verdadeiro).
-siM(Q1 e Q2, falso) :-
+
+siM(Q1 e Q2, falso):-
     si(Q1, desconhecido),
     si(Q2, falso).
-siM(Q1 e Q2, desconhecido) :-
+
+siM(Q1 e Q2, desconhecido):-
     si(Q1, desconhecido),
     si(Q2, desconhecido).
 
 
-siM(Q1 ou Q2, verdadeiro) :-
+siM(Q1 ou Q2, verdadeiro):-
     si(Q1, verdadeiro),
     si(Q2, verdadeiro).
-siM(Q1 ou Q2, verdadeiro) :-
+
+siM(Q1 ou Q2, verdadeiro):-
     si(Q1, verdadeiro),
     si(Q2, falso).
+
 siM(Q1 ou Q2, verdadeiro) :-
     si(Q1, verdadeiro),
     si(Q2, desconhecido).
+
 siM(Q1 ou Q2, verdadeiro) :-
     si(Q1, falso),
     si(Q2, verdadeiro).
-siM(Q1 ou Q2, falso) :-
+
+siM(Q1 ou Q2, falso):-
     si(Q1, falso),
     si(Q2, falso).
-siM(Q1 ou Q2, desconhecido) :-
+
+siM(Q1 ou Q2, desconhecido):-
     si(Q1, falso),
     si(Q2, desconhecido).
-siM(Q1 ou Q2, verdadeiro) :-
+
+siM(Q1 ou Q2, verdadeiro):-
     si(Q1, desconhecido),
     si(Q2, verdadeiro).
-siM(Q1 ou Q2, desconhecido) :-
+
+siM(Q1 ou Q2, desconhecido):-
     si(Q1, desconhecido),
     si(Q2, falso).
-siM(Q1 ou Q2, desconhecido) :-
+
+siM(Q1 ou Q2, desconhecido):-
     si(Q1, desconhecido),
     si(Q2, desconhecido).
 
@@ -270,7 +289,10 @@ utente(6,filipa,guimaraes,f,sim).
 excecao(registo(r1,5,23,01,2018,31,168,60,boa)).    % não se lembra em que dia foi feito o registo
 excecao(registo(r1,5,24,01,2018,31,168,60,boa)).
 
+%-----------------------------------------------------------------------------------
 % conhecimento interdito
+%-----------------------------------------------------------------------------------
+
 
 excecao(registo(R,Nu,D,M,A,I,Al,P,Td)):-registo(R,Nu,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
 interdito(algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
@@ -288,12 +310,15 @@ registo(r1,8,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso
                        N==0).                     % aqui também não nos é permitido saber nenhum dado de saúde sobre o presidente da República
 
 
+
+%-----------------------------------------------------------------------------------
 % conhecimento positivo e negativo
+%-----------------------------------------------------------------------------------
 
 utente(9,alberto,tomar,m,nao).
-registo(r1,9,04,11,2023,43,171,68,boa).                                                         %%%%%%%%%%%%%%%%%%%%%%%
--imc(r1,9,27.2,obesidade,30.1,39.9).        % conhecimento negativo. este registo é falso       %%% Aqui temos conhecimento com o "-". Podiamos criar algum tambem que tivesse o "nao" (tipo, nao ha prova que...)
-imc(r1,9,23.3,normal,18.5,24.9).        % este é o verdadeiro registo                           %%%%%%%%%%%%%%%%%%%%%%%
+registo(r1,9,04,11,2023,43,171,68,boa).                                                         
+-imc(r1,9,27.2,obesidade,30.1,39.9).        % conhecimento negativo. este registo é falso       
+imc(r1,9,23.3,normal,18.5,24.9).        % este é o verdadeiro registo                           
 
 
 
