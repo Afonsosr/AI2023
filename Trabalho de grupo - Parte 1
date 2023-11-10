@@ -43,66 +43,69 @@ comprimento([H|T],C):-comprimento(T,N),
 %%%%%%    INVARIANTES    %%%%%%  Adição de restrições para a inserção e remoção de novos dados na base de dados.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-
+utente(46,amalia,lisboa,f,nao).                                          %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     ---                       ----
+utente(72,jorge,braga,m,sim).                                            %%%%%%%%%% APAGAR ESTES EXEMPLOS %%%%%%%%%%  ----------------------------
+registo(r1,46,10,11,2023,45,180,79,boa).                                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     ---                       ----   
+imc(r1,46,24,normal,18.5,24.9).
 %%%%%%%%%%%% invariantes inserção utente %%%%%%%%%%%%%%     
-+utente(Nu,N,C,S,A)::(findall((Nu),(utente(Nu,_,_,_,_)),Com),    %FUNCIONA
++utente(Nu,N,C,S,A)::(findall((Nu),(utente(Nu,_,_,_,_)),Com),    
             comprimento(Com,X),                              % Garante que não ha dois registos de utente para o mesmo número. mesmo que se crie outro registo para a mesma pessoa, por exemplo, porque mudou de cidade, tem de se criar um registo novo
             X==1).
 
 %%%%%%%%%%%% invariantes inserção registo %%%%%%%%%%%%%%         
-+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((R,Nu),(registo(R,Nu,D,M,A,I,Al,P,Td)),Com),    %FUNCIONA
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((R,Nu),(registo(R,Nu,_,_,_,_,_,_,_)),Com),    
             comprimento(Com,X),                              % Garante que não ha dois registos de utente para o mesmo número. mesmo que se crie outro registo para a mesma pessoa, por exemplo, porque mudou de cidade, tem de se criar um registo novo
             X==1).
 
-+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((Nu),((registo(_,Nu,_,_,_,_,_,_,_)),(utente(Nu,_,_,_,_))),Com),         % nao funciona
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((Nu),(utente(Nu,_,_,_,_)),Com),         % nao funciona
             comprimento(Com,X),                                        % Só é possível inserir registo de utente se o utente estiver inserido
             X>=1).                             
 
  
-+registo(R,Nu,D,M,A,I,Al,P,Td):-       % nao funciona
-            D=<31:-member(M, [1, 3, 5, 7, 8, 10, 12]),
++registo(R,Nu,D,M,A,I,Al,P,Td)::(     
+             (D=<31,member(M, [1, 3, 5, 7, 8, 10, 12]),
             A=<2023,                
             A>=0,                                % Garante que um registo tem de ter mês e ano válidos e que os valores de idade, peso e altura tem de ser positivos.
             Al>0,
             I>0,
-            P>0;
+            P>0);
 
-            D=<30:-member(M, [4, 6, 8,11]),
+            (D=<30,member(M, [4, 6, 8,11]),
             A=<2023,              
             A>=0,
             Al>0,
             I>0,
-            P>0;
+            P>0);
             
-            D=<29:-member(M, [2]),
+            (D=<29,member(M, [2]),
             A=<2023,               
             A>=0,
             A mod 4=:=0,                    % Nesta parte, garante os valores de inserção para um ano bissexto
             A mod 100 =\= 0,
             Al>0,
             I>0,
-            P>0;
+            P>0);
 
-            D=<28:-member(M, [2]),
+            (D=<28,member(M, [2]),
             A=<2023,                % Aqui não precisamos de verificações específicas nos anos porque se é bissexto o programa para em cima, não entra nesta parte.
             A>=0,
             Al>0,
             I>0,
-            P>0.
+            P>0)).
 
 %%%%%%%%%%%% invariantes inserção imc %%%%%%%%%%%%%%
 
-+imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((R,Nu),(imc(R,Nu,Imc,Cl,Linf,Lsup)),Com), %FUNCIONA
++imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((R,Nu),(imc(R,Nu,_,_,_,_)),Com), 
             comprimento(Com,X),                                 % Garante que não ha dois registos de imc com o mesmo número para um determinado utente.
             X=:=1).
 
-+imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((Nu),(imc(_,Nu,_,_,_,_),utente(Nu,_,_,_,_)),Com),   % FUNCIONA
++imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((Nu),(imc(_,Nu,_,_,_,_),utente(Nu,_,_,_,_)),Com), 
             comprimento(Com,X),                                        % Só é possível inserir registo de imc se o utente estiver inserido
             X>=1).                              
 
-+imc(R,Nu,Imc,Cl,Linf,Lsup):- %NAO FUNCIONA
-            Imc=<Lsup,               % o valor do imc tem de estar dentro dos limites definidos.
-            Imc>=Linf.
++imc(R,Nu,Imc,Cl,Linf,Lsup):: 
+            (Imc=<Lsup,               % o valor do imc tem de estar dentro dos limites definidos.
+            Imc>=Linf).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -251,7 +254,7 @@ classificacao_imc(R,Nu,Imc,Classificacao,Lims):-
                 registo(R,Nu,_,_,_,_,Al,P,_),
                 calcular_imc(P,Al,Imc),
                 Imc>=40,
-                Lims = [40,+∞],
+                Lims = [40,infinito], % arranjar o simbolo de infinito pra prolog
                 Classificacao=obesidade_morbida.                
 
 %-----------------------------------------------------------------
@@ -299,13 +302,13 @@ interdito(algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,al
 
 utente(7,cleopatra,cairo,f,nao_sabe). % neste caso, temos aqui conhecimento incerto. não se sabe se a cleopatra tinha antecedentes familiares de obesidade
 registo(r1,7,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao). 
-+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,7,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((D,M,A,I,Al,P,Td),(registo(r1,7,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
                        comprimento(S,N),                                       
                        N==0).                     % nao temos forma de saber nenhum dado de saude da cleopatra 
 
 utente(8,marcelo,celorico,m,sim).
 registo(r1,8,algum_dia,algum_mes,algum_ano,alguma_idade,alguma_altura,algum_peso,alguma_alimentacao).
-+registo(R,Nu,D,M,A,I,Al,P,Td)::(findall(D,M,A,I,Al,P,Td,(registo(r1,8,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
++registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((D,M,A,I,Al,P,Td),(registo(r1,8,D,M,A,I,Al,P,Td),nao(interdito(D,M,A,I,Al,P,Td))),S),
                        comprimento(S,N),        
                        N==0).                     % aqui também não nos é permitido saber nenhum dado de saúde sobre o presidente da República
 
