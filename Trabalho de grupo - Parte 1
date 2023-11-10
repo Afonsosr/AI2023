@@ -30,6 +30,15 @@ evolucao(Termo) :-
 insercao(Termo) :-assert(Termo).
 insercao(Termo) :-retract(Termo),!, fail.
 
+% Função que permite a remocao do conhecimento - remover conhecimento à BD
+remocao( Termo ) :-
+    findall(Invariante, -Termo::Invariante, Lista),
+    remover(Termo),
+    teste(Lista).
+
+remover(Termo):-retract(Termo).
+remover(Termo):-assertz(Termo), !, fail.
+
 teste([]).
 teste([R|LR]):- R, teste(LR).
 
@@ -43,13 +52,10 @@ comprimento([H|T],C):-comprimento(T,N),
 %%%%%%    INVARIANTES    %%%%%%  Adição de restrições para a inserção e remoção de novos dados na base de dados.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-utente(46,amalia,lisboa,f,nao).                                          %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     ---                       ----
-utente(72,jorge,braga,m,sim).                                            %%%%%%%%%% APAGAR ESTES EXEMPLOS %%%%%%%%%%  ----------------------------
-registo(r1,46,10,11,2023,45,180,79,boa).                                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     ---                       ----   
-imc(r1,46,24,normal,18.5,24.9).
+
 %%%%%%%%%%%% invariantes inserção utente %%%%%%%%%%%%%%     
 +utente(Nu,N,C,S,A)::(findall((Nu),(utente(Nu,_,_,_,_)),Com),    
-            comprimento(Com,X),                              % Garante que não ha dois registos de utente para o mesmo número. mesmo que se crie outro registo para a mesma pessoa, por exemplo, porque mudou de cidade, tem de se criar um registo novo
+            comprimento(Com,X),                              % Garante que não ha dois utentes com o mesmo numero de utente
             X==1).
 
 %%%%%%%%%%%% invariantes inserção registo %%%%%%%%%%%%%%         
@@ -97,7 +103,7 @@ imc(r1,46,24,normal,18.5,24.9).
 
 +imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((R,Nu),(imc(R,Nu,_,_,_,_)),Com), 
             comprimento(Com,X),                                 % Garante que não ha dois registos de imc com o mesmo número para um determinado utente.
-            X=:=1).
+            X==1).
 
 +imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((Nu),(imc(_,Nu,_,_,_,_),utente(Nu,_,_,_,_)),Com), 
             comprimento(Com,X),                                        % Só é possível inserir registo de imc se o utente estiver inserido
@@ -108,6 +114,21 @@ imc(r1,46,24,normal,18.5,24.9).
             Imc>=Linf).
 
 
+
+
+%%%%%%%%%%%% invariantes remocao  %%%%%%%%%%%%%%
+
+-utente(Nu,N,C,S,A)::(findall((Nu),(utente(Nu,_,_,_,_)),Com),    % so se removem utentes se eles existirem
+            comprimento(Com,X),                              
+            X==0).
+
+-registo(R,Nu,D,M,A,I,Al,P,Td)::(findall((R,Nu),(registo(R,Nu,_,_,_,_,_,_,_)),Com),    
+            comprimento(Com,X),                              % so se removem registos de informacoes do utente que existam
+            X==0).
+
+-imc(R,Nu,Imc,Cl,Linf,Lsup)::(findall((R,Nu),(imc(R,Nu,_,_,_,_)),Com), 
+            comprimento(Com,X),                                 % so se removem registos de imc que existam
+            X==0).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %---------------------------------------------------------------
@@ -322,6 +343,7 @@ utente(9,alberto,tomar,m,nao).
 registo(r1,9,04,11,2023,43,171,68,boa).                                                         
 -imc(r1,9,27.2,obesidade,30.1,39.9).        % conhecimento negativo. este registo é falso       
 imc(r1,9,23.3,normal,18.5,24.9).        % este é o verdadeiro registo                           
+
 
 
 
